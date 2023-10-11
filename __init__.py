@@ -1,3 +1,4 @@
+"""file to inialize project"""
 from dotenv import load_dotenv
 from tortoise import Tortoise, run_async
 from database.tortoise.tortoise_config import TORTOISE
@@ -8,6 +9,8 @@ load_dotenv()
 
 
 async def create_tables():
+    """function to create tortoise tables in database
+    """
     await Tortoise.init(
         config=TORTOISE,
         modules={"models": ["database.tortoise.models"]}
@@ -16,6 +19,8 @@ async def create_tables():
 
 
 async def init():
+    """function to inializr project
+    """
     await create_tables()
     print('Tables Created')
     await delete_all_fluids()
