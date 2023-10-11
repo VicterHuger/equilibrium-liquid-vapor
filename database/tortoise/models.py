@@ -14,7 +14,7 @@ class Component(Model):
     """
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=20, unique=True, null=False)
-    critical_temperatue = fields.FloatField(null=False)
+    critical_temperature = fields.FloatField(null=False)
     critical_pressure = fields.FloatField(null=False)
     acentric_factor = fields.FloatField(null=False)
     aat1 = fields.FloatField(default=1., null=False)
@@ -22,7 +22,7 @@ class Component(Model):
     aat3 = fields.FloatField(default=1., null=False)
     r = fields.FloatField(default=1.,)
     q = fields.FloatField(default=1.,)
-    created_at = fields.DatetimeField(auto_now=True)
+    created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
 
     def __str__(self):
