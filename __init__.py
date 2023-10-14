@@ -1,12 +1,8 @@
 """file to inialize project"""
-import asyncio
 from dotenv import load_dotenv
 from tortoise import Tortoise, run_async
 from database.tortoise.tortoise_config import TORTOISE
-from database.tortoise.models import Component, Fluid, PengRobinsonParam
-from repository.fluid import get_all_fluids, create_fluids, delete_all_fluids
-from repository.component import create_components, delete_all_components, get_all_components
-from repository.peng_robinson_params import create_peng_robinson_params, delete_all_peng_robinson_params, get_all_peng_robinson_params
+from seed import seed
 
 load_dotenv()
 
@@ -26,27 +22,11 @@ async def init():
     """
     await create_tables()
     print('Tables Created')
-    await asyncio.gather(delete_all_fluids(), delete_all_components(), delete_all_peng_robinson_params())
-    await asyncio.gather(create_components(), create_fluids())
-    await create_peng_robinson_params()
 
-    fluids = await get_all_fluids()
-    for fluid in fluids:
-        print(fluid.name)
-        for field in Fluid._meta.fields_map:
-            print(f"  {field}: {getattr(fluid, field)}")
-
-    components = await get_all_components()
-    for component in components:
-        print(component.name)
-        for field in Component._meta.fields_map:
-            print(f"  {field}: {getattr(component, field)}")
-
-    peng_robinson_params = await get_all_peng_robinson_params()
-    for peng_robinson_param in peng_robinson_params:
-        for field in PengRobinsonParam._meta.fields_map:
-            print(f"  {field}: {getattr(peng_robinson_param, field)}")
-
+    is_seed_requested = input(
+        "Do you want to populate database with seed data? Answer with 1 for 'YES' or 2 for 'NO'\n")
+    if is_seed_requested == '1':
+        await seed()
     await Tortoise.close_connections()
 
 run_async(init())
