@@ -24,3 +24,9 @@ async def get_all_components():
     """A function to get all components in datbase
     """
     return await Component.all()
+
+
+async def get_component(component_name: str):
+    """A function to get component by name in datbase
+    """
+    return await Component.get(name=component_name)
