@@ -6,7 +6,7 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
         CREATE TABLE IF NOT EXISTS "component" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "name" VARCHAR(20) NOT NULL UNIQUE,
-    "critical_temperatue" DOUBLE PRECISION NOT NULL,
+    "critical_temperature" DOUBLE PRECISION NOT NULL,
     "critical_pressure" DOUBLE PRECISION NOT NULL,
     "acentric_factor" DOUBLE PRECISION NOT NULL,
     "aat1" DOUBLE PRECISION NOT NULL  DEFAULT 1,
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS "pengrobinsonparam" (
     "componentB_id" INT NOT NULL REFERENCES "component" ("id") ON DELETE CASCADE,
     CONSTRAINT "uid_pengrobinso_compone_ed2ca9" UNIQUE ("componentA_id", "componentB_id")
 );
-COMMENT ON TABLE "pengrobinsonparam" IS 'PengRobinsonParam for a combination of two fluids';
+COMMENT ON TABLE "pengrobinsonparam" IS 'PengRobinsonParam for a combination of two components';
 CREATE TABLE IF NOT EXISTS "uniquacparm" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "param" DOUBLE PRECISION NOT NULL  DEFAULT 0,
