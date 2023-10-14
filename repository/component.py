@@ -2,7 +2,7 @@
 """
 import asyncio
 from database.tortoise.models import Component
-from database.excell.component_data import COMPONENTS
+from database.seed_data.component_data import COMPONENTS
 
 
 async def create_components():
@@ -15,12 +15,12 @@ async def create_components():
 
 
 async def delete_all_components():
-    """A function to delete all fluids in datbase
+    """A function to delete all components in datbase
     """
     await Component.filter().delete()
 
 
 async def get_all_components():
-    """A function to get all fluids in datbase
+    """A function to get all components in datbase
     """
     return await Component.all()

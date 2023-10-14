@@ -2,7 +2,7 @@
 """
 import asyncio
 from database.tortoise.models import Fluid
-from database.excell.fluid_data import create_fluid_data
+from database.seed_data.fluid_data import create_fluid_data
 
 
 async def create_fluids():

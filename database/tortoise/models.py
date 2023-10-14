@@ -66,7 +66,7 @@ class ComponentFluid(Model):
 
 class PengRobinsonParam(Model):
     """
-    PengRobinsonParam for a combination of two fluids
+    PengRobinsonParam for a combination of two components
 
     """
 
@@ -83,11 +83,6 @@ class PengRobinsonParam(Model):
             is unique in the PengRobinsonParam table.
         """
         unique_together = ("componentA", "componentB")
-
-    async def save(self, *args, **kwargs):
-        if self.componentA == self.componentB:
-            self.param = 0.0
-        super().save(*args, **kwargs)
 
 
 class UniquacParm(Model):
