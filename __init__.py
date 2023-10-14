@@ -3,9 +3,10 @@ import asyncio
 from dotenv import load_dotenv
 from tortoise import Tortoise, run_async
 from database.tortoise.tortoise_config import TORTOISE
-from database.tortoise.models import Component, Fluid
+from database.tortoise.models import Component, Fluid, PengRobinsonParam
 from repository.fluid import get_all_fluids, create_fluids, delete_all_fluids
 from repository.component import create_components, delete_all_components, get_all_components
+from repository.peng_robinson_params import create_peng_robinson_params, delete_all_peng_robinson_params, get_all_peng_robinson_params
 
 load_dotenv()
 
@@ -21,12 +22,13 @@ async def create_tables():
 
 
 async def init():
-    """function to inializr project
+    """function to inialize project
     """
     await create_tables()
     print('Tables Created')
-    await asyncio.gather(delete_all_fluids(), delete_all_components())
+    await asyncio.gather(delete_all_fluids(), delete_all_components(), delete_all_peng_robinson_params())
     await asyncio.gather(create_components(), create_fluids())
+    await create_peng_robinson_params()
 
     fluids = await get_all_fluids()
     for fluid in fluids:
@@ -39,6 +41,11 @@ async def init():
         print(component.name)
         for field in Component._meta.fields_map:
             print(f"  {field}: {getattr(component, field)}")
+
+    peng_robinson_params = await get_all_peng_robinson_params()
+    for peng_robinson_param in peng_robinson_params:
+        for field in PengRobinsonParam._meta.fields_map:
+            print(f"  {field}: {getattr(peng_robinson_param, field)}")
 
     await Tortoise.close_connections()
 
