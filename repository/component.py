@@ -6,7 +6,7 @@ from database.seed_data.component_data import COMPONENTS
 
 
 async def create_components():
-    """A function to create component in datbase
+    """A function to create component in database
     """
     components_data = list(COMPONENTS.values())
     components = await asyncio.gather(*[Component.create(**component) for component in components_data])
@@ -15,18 +15,18 @@ async def create_components():
 
 
 async def delete_all_components():
-    """A function to delete all components in datbase
+    """A function to delete all components in database
     """
     await Component.filter().delete()
 
 
 async def get_all_components():
-    """A function to get all components in datbase
+    """A function to get all components in database
     """
     return await Component.all()
 
 
 async def get_component(component_name: str):
-    """A function to get component by name in datbase
+    """A function to get component by name in database
     """
     return await Component.get(name=component_name)

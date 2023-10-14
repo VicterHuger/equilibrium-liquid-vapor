@@ -6,7 +6,7 @@ from repository.component import get_component
 
 
 async def create_peng_robinson_params():
-    """A function to create peng robinson params in datbase
+    """A function to create peng robinson params in database
     """
 
     peng_robinson_params_data = PENG_ROBINSON_PARAMS_VALUES.items()
@@ -20,12 +20,12 @@ async def create_peng_robinson_params():
 
 
 async def delete_all_peng_robinson_params():
-    """A function to delete all peng robinson params in datbase
+    """A function to delete all peng robinson params in database
     """
     await PengRobinsonParam.filter().delete()
 
 
 async def get_all_peng_robinson_params():
-    """A function to get all peng robinson params in datbase
+    """A function to get all peng robinson params in database
     """
     return await PengRobinsonParam.all()

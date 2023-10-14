@@ -6,7 +6,7 @@ from database.seed_data.fluid_data import create_fluid_data
 
 
 async def create_fluids():
-    """A function to create fluid in datbase
+    """A function to create fluid in database
     """
     fluids_data = [create_fluid_data('Fluid1')]
     fluids_data.append(create_fluid_data('Fluid2'))
@@ -19,12 +19,12 @@ async def create_fluids():
 
 
 async def delete_all_fluids():
-    """A function to delete all fluids in datbase
+    """A function to delete all fluids in database
     """
     await Fluid.filter().delete()
 
 
 async def get_all_fluids():
-    """A function to get all fluids in datbase
+    """A function to get all fluids in database
     """
     return await Fluid.all()
