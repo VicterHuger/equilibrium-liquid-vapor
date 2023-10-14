@@ -28,3 +28,9 @@ async def get_all_fluids():
     """A function to get all fluids in database
     """
     return await Fluid.all()
+
+
+async def get_fluid(fluid_name: str):
+    """A function to get fluid by name in database
+    """
+    return await Fluid.get(name=fluid_name)
