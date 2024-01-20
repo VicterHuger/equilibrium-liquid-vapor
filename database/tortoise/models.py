@@ -87,12 +87,15 @@ class PengRobinsonParam(Model):
 
 class UniquacParm(Model):
     """
-    Uniquac Param model for two components
+    Uniquac Params model for two components: 
+    Uij_0: List[List[float]]
+    Uij_T: [List[float]]
     """
     id = fields.IntField(pk=True)
     componentA = fields.ForeignKeyField(MODEL_COMPONENT, 'uniquac_param_A')
     componentB = fields.ForeignKeyField(MODEL_COMPONENT, 'uniquac_param_B')
-    param = fields.FloatField(null=False, default=0.0)
+    param_0 = fields.FloatField(null=False, default=0.0)
+    param_t = fields.FloatField(null=False, default=0.0)
 
     class Meta:
         """Meta class with unique_together is used to ensure 
@@ -103,5 +106,6 @@ class UniquacParm(Model):
 
     async def save(self, *args, **kwargs):
         if self.componentA == self.componentB:
-            self.param = 0.0
+            self.param_0 = 0.0
+            self.param_t = 0.0
         super().save(*args, **kwargs)
