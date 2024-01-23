@@ -1,4 +1,7 @@
-"""It is a file to create component data to insert in database"""
+"""It is a file to create component data to insert in database
+    CRITICAL_TEMPERATURE (K)
+    CRITICAL_PRESSURE (bar)
+"""
 
 NAME = "name"
 CRITICAL_TEMPERATURE = "critical_temperature"
