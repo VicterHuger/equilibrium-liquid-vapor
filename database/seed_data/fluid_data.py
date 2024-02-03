@@ -144,6 +144,9 @@ Fluid5 = [
     {TEMPERATURE: 263.0, PRESSURE: 31.3},
 ]
 
+Fluid6 = [{TEMPERATURE: 338.705, PRESSURE: 419.960}]
+Fluid7 = [{TEMPERATURE: 422.594, PRESSURE: 339.429}]
+
 
 def create_fluid_data(name: str):
     """Function to create fluid data to database insertion
@@ -156,5 +159,5 @@ def create_fluid_data(name: str):
     """
     return {
         "name": name,
-        "temp_pressure_coordinates": [{TEMPERATURE: item[TEMPERATURE], PRESSURE:item[PRESSURE]} for item in globals()[name]]
+        "temp_pressure_coordinates": [{TEMPERATURE: item[TEMPERATURE], PRESSURE: item[PRESSURE]} for item in globals()[name]]
     }

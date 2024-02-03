@@ -13,6 +13,8 @@ async def create_fluids():
     fluids_data.append(create_fluid_data('Fluid3'))
     fluids_data.append(create_fluid_data('Fluid4'))
     fluids_data.append(create_fluid_data('Fluid5'))
+    fluids_data.append(create_fluid_data('Fluid6'))
+    fluids_data.append(create_fluid_data('Fluid7'))
     fluids = await asyncio.gather(*[Fluid.create(**fluid) for fluid in fluids_data])
     for fluid in fluids:
         await fluid.save()
