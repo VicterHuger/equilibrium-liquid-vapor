@@ -59,6 +59,28 @@ PROGRAM CONDENSACAO
       CLOSE(01)
       PAUSE
 END PROGRAM
+
+!****************************************************************************
+SUBROUTINE WILSON (NC, Pi, X, Y, T)
+    !IMPLICIT REAL*8(A-H,O-Z) 
+    !Correlação de Wilson para o cálculo da pressão de orvalho inicial (Wilson, 1968)
+    INTEGER :: I, NC
+    REAL*8 RAZAO(20), PC, Pi, W, TC !,TCkr(20)
+    REAL*8 X(20), Y(20), T !, Tkr
+    COMMON /DADOS/ TC(20), PC(20), W(20)
+    !
+    !Tkr=T*1.8d0 !Conversão de K -> ºR
+    !    
+     DO I=1,NC
+         !TCkr(I)=TC(I)*1.8D0 !Conversão de K-> ºR
+         RAZAO(I) = (PC(I)/Pi)(DEXP(5.373D0(1D0+W(I))*(1D0-(TC(I)/T)))) ! Ki
+         X(I) = Y(I)/RAZAO(I)
+         !CORRELAÇÃO DE WILSON
+     END DO
+     X(1:NC) = X(1:NC)/SUM(X(1:NC)) 
+     !WRITE(*,'(2/,2X,"Razao:", 6X, "PC", 6X, "W:", 6x, "TC:")')
+
+END
       
 !****************************************************************************************************************************************************
 !
