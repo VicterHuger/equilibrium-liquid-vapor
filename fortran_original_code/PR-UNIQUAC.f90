@@ -2,11 +2,11 @@
 !
 !  SUBROUTINE: PR0011
 !
-!  PURPOSE:  Cálculo da fugacidade pelo modelo PR-UNIQUAC-HK                   
+!  PURPOSE:  Cálculo de coeficiente de fugacidade pelo modelo PR-UNIQUAC-HK                   
 !
 !****************************************************************************
 
-SUBROUTINE PR0011( NM, PHA, P, T, XI, YI, ZT_p, VT_p, Fug_p )   
+SUBROUTINE PR0011( NM, PHA, P, T, XI, YI, Z_p, V_p, Fug_p )   
 
     IMPLICIT REAL*8(A-H,O-Z) 
     
@@ -16,6 +16,8 @@ SUBROUTINE PR0011( NM, PHA, P, T, XI, YI, ZT_p, VT_p, Fug_p )
                  AI(20),BI(20),CI(20)
     
     INTEGER :: PHA
+    
+    R = 83.14462D0 !(cm3.bar.K-1.mol-1)
     
     ! VARIÁVEIS PRINCIPAIS --------------------------------------------------
     !NC    ------ Número de componentes (espécies) no sistema
@@ -73,11 +75,14 @@ SUBROUTINE PR0011( NM, PHA, P, T, XI, YI, ZT_p, VT_p, Fug_p )
     ! CÁLCULO DA TRANSLAÇÃO VOLUMÉTRICA -------------------------------------
     CS = 0D0
     DO 004 I=1,NM
-         CALL VTPELL( I, T, CI(I) ) 
+         ! Passagem de parametro CI(I), nem todo compilador entende bem
+         !!!!CALL VTPELL( I, T, CI(I) ) 
+         CALL VTPELL( I, T, CCI ) 
+         CI(I) = CCI  !!!!
          CS = CS + ZI(I)*CI(I)
 004 CONTINUE
-    VT_p = V_p - CS
-    ZT_p = VT_p/(R*T/P)
+    V_p = V_p - CS
+    Z_p = V_p/(R*T/P)
     
 END
 
@@ -223,12 +228,12 @@ SUBROUTINE HKOKAL(NC, NM, T, P, X, A, B, GAMA, V_p, Fug, PHA)
               D1(20), D2(20), D4(20), D5(20), G(20), H(20), ALNFI(20), Fug(20)
     
     DIMENSION :: G1(20), G2(20), G3(20), G4(20), G5(20), AIJ(20,20), AS(20), &
-                 H10(20), B1(20), B2(20), B3(20), B4(20)
+                 H10(20), B1(20), B2(20), B3(20), B4(20), ZZ(3)
     
     COMMON /RGAS  / RG
     COMMON /CC    / C1,C2
     
-    INTEGER :: PHA, CCC
+    INTEGER :: PHA, CCC, NR
     
     RG = 83.14462D0 !(cm3.bar.K-1.mol-1)
     
@@ -278,7 +283,7 @@ SUBROUTINE HKOKAL(NC, NM, T, P, X, A, B, GAMA, V_p, Fug, PHA)
     !SOMA0
     !GX, HX e BX
     !CCC
-    
+    !PRINT*, 'PHA:', PHA
     ! CÁLCULO DE DGE
     DGE = 0D0
     DO I=1,NC
@@ -374,13 +379,21 @@ SUBROUTINE HKOKAL(NC, NM, T, P, X, A, B, GAMA, V_p, Fug, PHA)
     ! CÁLCULO DO COEFICIENTE DE FUGACIDADE    
     r1 = - C1
     r2 = - C2 
-    A10 = - BM*(r1*r2*(BM**2) + r1*r2*BM*RG*T/P + AM/P)
-    A11 = (BM**2)*(r1*r2+r1+r2) + RG*T*BM*(r1+r2)/P + AM/P
-    A12 = - (BM*(r1+r2+1D0) + RG*T/P)
-    CALL CUBICA(A10, A11, A12, Z2, Z3, Z4, delta)
-    IF(PHA==1) V_p = MIN(Z2, Z3, Z4) 
-    IF(PHA==2) V_p = MAX(Z2, Z3, Z4)
-    Z_p = V_p/(RG*T/P) 
+    !PRINT*, r1, r2, RG
+    !PRINT*, T, P
+    !PRINT*, BM, AM
+    A12 = - BM*(r1*r2*(BM**2) + r1*r2*BM*RG*T/P + AM/P)      ;!PRINT*, 'A10:', A12
+    A11 = (BM**2)*(r1*r2+r1+r2) + RG*T*BM*(r1+r2)/P + AM/P   ;!PRINT*, 'A11:', A11
+    A10 = - (BM*(r1+r2+1D0) + RG*T/P)                        ;!PRINT*, 'A12:', A10
+    CALL CUBICA(A10, A11, A12, ZZ, NR)
+    IF(NR<=0D0) THEN
+        IF(PHA==2) V_p = ZZ(1)
+        IF(PHA==1) V_p = ZZ(3)
+    ELSE
+        V_p = ZZ(1)
+    END IF
+    Z_p = V_p/(RG*T/P)
+    !PRINT*, Z_p;pause
     DO 005 I=1,NM 
         !Cálculo baseado em parâmetros de componente puro e BM -----
         G1(I) = -DLOG(GAMA(I))  
@@ -426,12 +439,16 @@ SUBROUTINE HKOKAL(NC, NM, T, P, X, A, B, GAMA, V_p, Fug, PHA)
     008 CONTINUE
         r1 = - C1
         r2 = - C2 
-        A10 = - BM*(r1*r2*(BM**2) + r1*r2*BM*RG*T/P + AM/P)
+        A12 = - BM*(r1*r2*(BM**2) + r1*r2*BM*RG*T/P + AM/P)
         A11 = (BM**2)*(r1*r2+r1+r2) + RG*T*BM*(r1+r2)/P + AM/P
-        A12 = - (BM*(r1+r2+1D0) + RG*T/P)  
-        CALL CUBICA(A10, A11, A12, Z2, Z3, Z4, delta)
-        IF(PHA==1) V_p = MIN(Z2, Z3, Z4) 
-        IF(PHA==2) V_p = MAX(Z2, Z3, Z4)
+        A10 = - (BM*(r1+r2+1D0) + RG*T/P)  
+        CALL CUBICA(A10, A11, A12, ZZ, NR)
+        IF(NR<=0D0) THEN
+            IF(PHA==2) V_p = ZZ(1)
+            IF(PHA==1) V_p = ZZ(3)
+        ELSE
+            V_p = ZZ(1)
+        END IF
         Z_p = V_p/(RG*T/P)
         a2 = P*AM/((RG*T)**2D0) 
         y2 = P*BM/(RG*T)   
@@ -498,12 +515,19 @@ SUBROUTINE VTPELL( I, T, c )
      
     COMMON /DADOS/ TC(20), PC(20), W(20)    
     COMMON /VTR/   APE1(20), APE2(20), APE3(20)
-                   
+    COMMON /VTPRR/ VTPR
+    !!!!DIMENSION C(20)
     REAL, PARAMETER :: R = 83.1451D0   ! (bar.cm3.mol−1.K−1)
-    
+   
     TR = T/TC(I)
-    c = APE1(I)*TR**2D0+APE2(I)*TR+APE3(I)
-    
+    IF (VTPR==1) THEN
+        !!!!c(i)=0d0
+        c=0d0
+    ELSE IF (VTPR==2) THEN
+     !!!!c(i) = APE1(I)*TR**2D0+APE2(I)*TR+APE3(I)
+     c = APE1(I)*TR**2D0+APE2(I)*TR+APE3(I)
+    END IF
+    !c = APE1(I)*TR**2D0+APE2(I)*TR+APE3(I)
 END  
     
 !****************************************************************************
@@ -514,31 +538,80 @@ END
 !
 !**************************************************************************** 
       
-SUBROUTINE CUBICA( A10, A11, A12, Z1, Z2, Z3, delta )
-
-     IMPLICIT REAL*8(A-H,O-Z)
-
-     Z = 1D0 ; CC=0D0
-     DO WHILE (DABS(Z - Z0) > 0.0000000001 .AND. CC<100000D0) 
-        Z0 = Z
-        Z = Z - (Z**3D0 + A12*Z**2D0 + A11*Z + A10)/(3D0*Z**2D0 + 2D0*A12*Z + A11)
-        CC=CC+1D0
-     END DO 
-
-     A22 = A12+Z
-     A21 = (Z**2D0)+A12*Z+A11
-     delta = (A22**2D0)-4D0*A21
-    
-     IF (delta >= 0D0) THEN
-         Z2 = (-A22-(delta**(0.5D0)))/2D0
-         Z3 = (-A22+(delta**(0.5D0)))/2D0
-     ELSE
-         Z2 = Z
-         Z3 = Z
-         !PRINT*, 'Cubica: delta menor que zero!'
-     END IF
-         Z1 = Z
-
+SUBROUTINE CUBICA(A, B, c, X, nr)
+      !
+      implicit none
+       real*8 ex, tres, g, r, d, q, s, z1, z2, u, z3, theta, vacos, te 
+       real*8 pi, X(3), A, B, c
+       integer nr
+       !
+       pi = 3.1415926535897932384626433832795d0
+       te = 0.d0
+       ex = 1.0 / 3.0
+       tres = dsqrt(3.d0)
+       X(1) = 0.0d0
+       X(2) = 0.0d0
+       X(3) = 0.0d0
+       q = (3.0 * B - (A ** 2)) / 9.0
+       r = (9.0 * A * B - 27.0 * c - 2.0 * A ** 3) / 54.0
+       d = q ** 3 + r ** 2
+       If (dAbs(d) .le. 0.00000001)  d = 0.0
+      !
+      If (d .eq. 0.0) Then
+       nr = 0
+       If (r .ge. 0) Then 
+         s = dAbs(r) ** ex 
+       Else 
+         s = -dAbs(r) ** ex
+       Endif
+        !   s = Sign((Abs(r) ** ex), r)
+       z1 = 2.0 * s - A / 3.0
+       If (z1 .le. 0.00000001)  z1 = 0.0
+       z2 = -s - A / 3.0
+       If (z2 .le. 0.00000001)  z2 = 0.0
+       X(1) = dmax1(z1, z2)
+       X(3) = dmin1(z1, z2)
+       X(2) = X(3)
+      ElseIf (d .gt. 0.0) Then
+       nr = 1
+       u = r + dsqrt(d)
+       If (u .ge. 0) Then 
+         s = dAbs(u) ** ex 
+       Else 
+         s = -dAbs(u) ** ex
+       Endif
+       If (dAbs(s) .le. 0.00000001)  s = 0.0
+       u = r - Sqrt(d)
+       If (u .ge. 0) Then 
+         te = dAbs(u) ** ex 
+       Else 
+         te = -dAbs(u) ** ex
+       Endif
+       If (dAbs(te) .le. 0.00000001)  te = 0.0
+       X(1) = s + te - A / 3.0
+       X(2) = 0.0d0
+       X(3) = 0.0d0
+       return
+      ElseIf (d .lt. 0.0) Then
+       nr = -1
+       u = 2.0 * dSqrt(-q)
+       vacos = r / dsqrt(-q ** 3)
+       If (vacos .gt. 1.0)  vacos = 1.0
+       theta = dAcos(vacos) / 3.0
+       If (dAbs(theta) .le. 0.00000001)  theta = 0.0
+       z1 = u * dCos(theta) - A / 3.0
+       If (z1 .le. 0.00000001)  z1 = 0.0
+       z2 = u * dCos(theta + 2.0 * Pi / 3.0) - A / 3.0
+       If (z2 .le. 0.00000001)  z2 = 0.0
+       z3 = u * dCos(theta + 4.0 * Pi / 3.0) - A / 3.0
+       If (z3 .le. 0.00000001)  z3 = 0.0
+       X(1) = dmax1(z1, dmax1(z2, z3))
+       X(3) = dmin1(z1, dmin1(z2, z3))
+       If (X(1) .eq. z1)  X(2) = dmax1(z2, z3)
+       If (X(1) .eq. z2)  X(2) = dmax1(z1, z3)
+       If (X(1) .eq. z3)  X(2) = dmax1(z1, z2)
+       return
+      End If
      RETURN
 END  
 
@@ -550,16 +623,16 @@ END
 !
 !**************************************************************************
 
-SUBROUTINE PHASES( NC, PHA, P, T, XI, YI, ZT_p, VT_p, fug_p )   
+SUBROUTINE PHASES( NC, PHA, P, T, XI, YI, Z_p, V_p, fug_p)   
 
      IMPLICIT REAL*8(A-H,O-Z) 
     
      COMMON /BIP/ DIJ(20,20)
      
      DIMENSION :: AIJ(20,20), ZI(20), XI(20), YI(20), &
-                  AI(20), BI(20), CI(20), AS(20), fug_p(20)
+                  AI(20), BI(20), CI(20), AS(20), fug_p(20), ZZ(3)
      
-     INTEGER :: PHA
+     INTEGER :: PHA, NR
      
      REAL, PARAMETER :: R = 83.1451D0   ! (bar.cm3.mol−1.K−1)
 !**************************************************************************
@@ -586,19 +659,26 @@ SUBROUTINE PHASES( NC, PHA, P, T, XI, YI, ZT_p, VT_p, fug_p )
      eps = 1D0 - DSQRT(2D0)
      r1 = - sig
      r2 = - eps 
-     A10 = - BM*(r1*r2*(BM**2) + r1*r2*BM*R*T/P + AM/P)
+     A12 = - BM*(r1*r2*(BM**2) + r1*r2*BM*R*T/P + AM/P)
      A11 = (BM**2)*(r1*r2+r1+r2) + R*T*BM*(r1+r2)/P + AM/P
-     A12 = - (BM*(r1+r2+1D0) + R*T/P)  
-     CALL CUBICA( A10, A11, A12, Z1, Z2, Z3, delta)
+     A10 = - (BM*(r1+r2+1D0) + R*T/P)  
+     CALL CUBICA(A10, A11, A12, ZZ, NR)
 !**************************************************************************  
-     IF(PHA==1) V_p = MIN(Z1, Z2, Z3) 
-     IF(PHA==2) V_p = MAX(Z1, Z2, Z3)
+     IF(NR<=0D0) THEN
+         IF(PHA==2) V_p = ZZ(1)
+         IF(PHA==1) V_p = ZZ(3)
+     ELSE
+         V_p = ZZ(1)
+     END IF  
      Z_p = V_p/(R*T/P)
      AS = 0D0 
      DO 2005 I=1,NC
          DO 2004 J=1,NC
             AS(I) = AS(I) + ZI(J)*AIJ(I,J)
 2004     CONTINUE
+          !   não precisa obter a fugacidade, apenas o coeficiente de fugacidade de componente com composição igual a zero pode ser calculado.
+          !    O efeito de Z(I) = 0 será incluído no cálculo de equilíbrio de fases ( X_i*Phil_i = Y_i*Phiv_i)
+          !    pode eliminar a parcela ==  ZI(I)*P* == da linha a seguir
          fug_p(I) = ZI(I)*P*DEXP((BI(I)/BM)*(Z_p-1D0)-DLOG(Z_p-b2)-    &
                     (a2/b2)*(1D0/(sig-eps))*(2D0*AS(I)/AM - BI(I)/BM)* & 
                     DLOG((Z_p+sig*b2)/(Z_p+eps*b2)))  
@@ -606,11 +686,14 @@ SUBROUTINE PHASES( NC, PHA, P, T, XI, YI, ZT_p, VT_p, fug_p )
 !************************************************************************** 
      CS = 0D0
      DO 2006 I=1,NC
-          CALL VTPELL( I, T, CI(I) ) 
+          ! Passagem de parametro CI(I), nem todo compilador entende bem
+          !!!!CALL VTPELL( I, T, CI(I) ) 
+          CALL VTPELL( I, T, CCI )
+          CI(I) = CCI !!!!
           CS = CS + ZI(I)*CI(I)
 2006 CONTINUE
-     VT_p = V_p - CS
-     ZT_p = VT_p/(R*T/P)
+     V_p = V_p - CS
+     !!!!Z_p = V_p/(R*T/P)
 
 END
     
@@ -772,16 +855,24 @@ END
 !C
       COMMON /RGAS  / RGAS
 !C
+      DIMENSION :: ZZ(3)
+!C
+      INTEGER :: PAR
+!C
       r1 = - (1D0 + DSQRT(2D0)) 
       r2 = - (1D0 - DSQRT(2D0))
 !C
-      A10 = - BM*(r1*r2*(BM**2) + r1*r2*BM*RGAS*T/P + AM/P)
+      A12 = - BM*(r1*r2*(BM**2) + r1*r2*BM*RGAS*T/P + AM/P)
       A11 = (BM**2)*(r1*r2+r1+r2) + RGAS*T*BM*(r1+r2)/P + AM/P
-      A12 = - (BM*(r1+r2+1D0) + RGAS*T/P)  
-      CALL CUBICA(A10, A11, A12, Z1, Z2, Z3, delta)
+      A10 = - (BM*(r1+r2+1D0) + RGAS*T/P)  
+      CALL CUBICA(A10, A11, A12, ZZ, PAR)
+      IF(PAR<=0D0) THEN
+          IF(ITYP==-1) V = ZZ(1)
+          IF(ITYP==1) V = ZZ(3)
+      ELSE
+          V = ZZ(1)
+      END IF
 !C
-      IF(ITYP==1) V = MIN(Z1, Z2, Z3) 
-      IF(ITYP==-1) V = MAX(Z1, Z2, Z3)
       Z = V/(RGAS*T/P)
 !C
       RETURN
