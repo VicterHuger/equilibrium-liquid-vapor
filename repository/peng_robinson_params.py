@@ -3,6 +3,7 @@
 from database.tortoise.models import PengRobinsonParam
 from database.seed_data.peng_robinson_params_data import PENG_ROBINSON_PARAMS_VALUES
 from repository.component import get_component
+from tortoise.exceptions import DoesNotExist
 
 
 async def create_peng_robinson_params():
@@ -29,3 +30,15 @@ async def get_all_peng_robinson_params():
     """A function to get all peng robinson params in database
     """
     return await PengRobinsonParam.all()
+
+
+async def get_peng_robinson_param_by_component_id(component_a_id: str, component_b_id: str):
+    """A function to get peng robinson binary param for two components ids provided
+    """
+    try:
+        return await PengRobinsonParam.get(componentA_id=component_a_id, componentB_id=component_b_id)
+    except DoesNotExist:
+        try:
+            return await PengRobinsonParam.get(componentB_id=component_a_id, componentA_id=component_b_id)
+        except Exception as err:
+            raise Exception(err)
